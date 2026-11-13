@@ -154,6 +154,8 @@
   let masterGain = null;
   let ambientNodes = [];
   let particles = [];
+  let irisMotion = [];
+  let pupils = [];
   let width = 0, height = 0, dpr = 1;
 
   function makeTicks() {
@@ -214,6 +216,8 @@
     document.documentElement.style.setProperty('--accent-soft',rgb(stage.color));
     eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
+    irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
+    pupils = [...eyeL.querySelectorAll('.pupil'), ...eyeR.querySelectorAll('.pupil')];
     eyebrow.innerHTML = stage.clan + ' <span>•</span> AWAKENING ' + String(stageIndex+1).padStart(2,'0');
     title.textContent = stage.title;
     subtitle.textContent = stage.subtitle;
@@ -404,11 +408,10 @@
     angle+=dt*(stageIndex>=7?-.18:.12);
     gazeX+=(targetX-gazeX)*clamp(dt*2.7);
     gazeY+=(targetY-gazeY)*clamp(dt*2.7);
-    const irisGroups=document.querySelectorAll('.iris-motion');
-    irisGroups.forEach((group,index)=>{
+    irisMotion.forEach((group,index)=>{
       group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+') rotate('+angle*57.3+' 170 95)');
     });
-    document.querySelectorAll('.pupil').forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2).toFixed(2)));
+    pupils.forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2).toFixed(2)));
     if(shake>0&&!reducedMotion){
       shake=Math.max(0,shake-dt*2.8);
       const amount=shake*shake*5;
