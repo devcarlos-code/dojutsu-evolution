@@ -163,7 +163,9 @@
   let audioContext = null;
   let masterGain = null;
   let ambientNodes = [];
-  let particles = [];\n  let shockwaves = [];\n  let transitionToken = 0;
+  let particles = [];
+  let shockwaves = [];
+  let transitionToken = 0;
   let irisMotion = [];
   let pupils = [];
   let width = 0, height = 0, dpr = 1;
@@ -203,7 +205,9 @@
 
   function spawnBurst(color, amount = 46, force = 1) {
     if (reducedMotion || intensity <= 0) return;
-    const cx = width * .5, cy = height * .48;\n    shockwaves.push({x:cx,y:cy,r:24,life:1,color});\n    if(shockwaves.length>5) shockwaves.shift();
+    const cx = width * .5, cy = height * .48;
+    shockwaves.push({x:cx,y:cy,r:24,life:1,color});
+    if(shockwaves.length>5) shockwaves.shift();
     const count = Math.round(amount * intensity);
     for(let i=0;i<count;i++){
       const a = Math.random()*Math.PI*2;
@@ -224,7 +228,8 @@
     const stage = STAGES[stageIndex];
     document.documentElement.style.setProperty('--accent',rgb(stage.color));
     document.documentElement.style.setProperty('--accent-soft',rgb(stage.color));
-    eyeL.dataset.pattern=stage.pattern; eyeR.dataset.pattern=stage.pattern;\n    eyeL.innerHTML = eyeSVG('L',stage);
+    eyeL.dataset.pattern=stage.pattern; eyeR.dataset.pattern=stage.pattern;
+    eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
     pupils = [...eyeL.querySelectorAll('.pupil'), ...eyeR.querySelectorAll('.pupil')];
