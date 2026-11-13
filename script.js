@@ -1,7 +1,11 @@
 (() => {
   'use strict';
 
-  const $ = (id) => document.getElementById(id);\n  window.addEventListener('error',(event)=>{\n    const status=document.getElementById('motionStatus');\n    if(status) status.textContent='ERROR DE INTERACCIÓN · '+(event.message||'SCRIPT');\n  });
+  const $ = (id) => document.getElementById(id);
+  window.addEventListener('error',(event)=>{
+    const status=document.getElementById('motionStatus');
+    if(status) status.textContent='ERROR DE INTERACCIÓN · '+(event.message||'SCRIPT');
+  });
   const clamp = (v, min = 0, max = 1) => Math.max(min, Math.min(max, v));
   const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, x) => {
@@ -443,5 +447,8 @@
   enterStage(0,false);
   updateControls();
   intensityValue.value=Math.round(intensity*100)+'%';
+  document.documentElement.dataset.appReady='true';
+  const status=$('motionStatus');
+  if(status) status.innerHTML='VISUAL ENGINE <i>● ONLINE · CONTROLS READY</i>';
   requestAnimationFrame(frame);
 })();
