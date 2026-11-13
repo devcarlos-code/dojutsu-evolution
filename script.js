@@ -101,12 +101,18 @@
     const grad = 'iris-' + id;
     return '<defs>' +
       '<radialGradient id="' + grad + '" cx=".38" cy=".32" r=".72"><stop offset="0" stop-color="' + irisA + '"/><stop offset=".18" stop-color="' + irisB + '"/><stop offset=".65" stop-color="' + irisC + '"/><stop offset="1" stop-color="#080309"/></radialGradient>' +
+      '<linearGradient id="sclera-' + id + '" x1="0" y1="0" x2=".15" y2="1"><stop offset="0" stop-color="#d9c9c7"/><stop offset=".42" stop-color="#bca9a8"/><stop offset="1" stop-color="#75666a"/></linearGradient>' +
       '<clipPath id="clip-' + id + '"><path d="' + eyePath + '"/></clipPath>' +
       '<filter id="glow-' + id + '" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>' +
       '</defs>' +
       '<path d="' + eyePath + '" fill="#050307" stroke="#171016" stroke-width="4"/>' +
-      '<path d="' + eyePath + '" fill="#eee9e5"/>' +
+      '<path d="' + eyePath + '" fill="url(#sclera-' + id + ')"/>' +
       '<g clip-path="url(#clip-' + id + ')">' +
+        '<g class="sclera-veins" fill="none" stroke="#76232b" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M34 78 C49 80 53 70 64 65 M49 78 L57 88 M64 65 L69 55 M306 78 C291 80 287 70 276 65 M291 78 L283 88 M276 65 L271 55" stroke-width="1.7" opacity=".62"/>' +
+          '<path d="M38 91 L53 96 L62 106 M53 96 L57 105 M302 91 L287 96 L278 106 M287 96 L283 105" stroke-width="1.15" opacity=".46"/>' +
+          '<path d="M28 84 L40 88 M312 84 L300 88 M70 58 L76 51 M270 58 L264 51" stroke-width=".9" opacity=".36"/>' +
+        '</g>' +
         '<path d="M15 95 C48 35 105 12 170 12 C235 12 292 35 325 95" fill="none" stroke="#080509" stroke-width="17" opacity=".25"/>' +
         '<g class="iris-motion">' +
           '<circle cx="170" cy="95" r="59" fill="url(#' + grad + ')"/>' +
@@ -449,8 +455,7 @@
   window.addEventListener('pointermove',(event)=>{
     if(event.pointerType==='touch')return;
     const rect=eyePair.getBoundingClientRect();
-    targetX=clamp((event.clientX-(rect.left+rect.width/2))/(rect.width/2),-1,1)*3.5;
-    targetY=clamp((event.clientY-(rect.top+rect.height/2))/(rect.height/2),-1,1)*2.2;
+    targetX=0; targetY=0;
   },{passive:true});
   window.addEventListener('keydown',(event)=>{
     if(['INPUT','BUTTON'].includes(document.activeElement.tagName))return;
@@ -474,16 +479,10 @@
     document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
     const pulse=Math.pow(Math.max(0,Math.sin(time*(stageIndex>=7?2.4:1.65))),8);
     const breathe=1+Math.sin(time*1.7)*.012*(.5+intensity)+pulse*.014*intensity;
-    // Keep the iris patterns anatomically stable: only subtle gaze and pulse,
-    // never rotate the whole iris (which makes the eyes look like spinning wheels).
-    gazeX+=(targetX-gazeX)*clamp(dt*2.7);
-    gazeY+=(targetY-gazeY)*clamp(dt*2.7);
-    irisMotion.forEach((group,index)=>{
-      group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+')');
-    });
-    pupils.forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2+pulse*1.8).toFixed(2)));
-    eyePair.style.setProperty('--gaze-x',gazeX+'px'); eyePair.style.setProperty('--gaze-y',gazeY+'px');
-    eyePair.style.setProperty('--eye-pulse',(1+pulse*.018*intensity).toFixed(3));
+    // Iris artwork stays locked to the center of the eye.
+    // Motion is limited to light, particles and the outer scene.
+    pupils.forEach(pupil=>pupil.setAttribute('r',(12+pulse*.35).toFixed(2)));
+
     if(shake>0&&!reducedMotion){
       shake=Math.max(0,shake-dt*2.8);
       const amount=shake*shake*5;
