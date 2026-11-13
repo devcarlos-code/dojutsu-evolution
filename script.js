@@ -235,6 +235,17 @@
     experience.classList.add('power-tier-'+tier);
     document.documentElement.dataset.powerTier=tier;
     $('eyeScene').dataset.stage=stage.id;
+    const scene=$('eyeScene'), experienceRoot=$('experience');
+    scene.classList.remove('stage-enter');
+    experienceRoot.classList.remove('stage-shift');
+    void scene.offsetWidth;
+    scene.classList.add('stage-enter');
+    experienceRoot.classList.add('stage-shift');
+    window.clearTimeout(enterStage.animationTimer);
+    enterStage.animationTimer=window.setTimeout(()=>{
+      scene.classList.remove('stage-enter');
+      experienceRoot.classList.remove('stage-shift');
+    },1250);
     eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
@@ -253,7 +264,6 @@
         void flashOverlay.offsetWidth;
         flashOverlay.classList.add('flash');
         shake = stageIndex>=7 ? 2.4 : stageIndex>=3 ? 1.65 : .95;
-      const scene=$('eyeScene');
       scene.classList.remove('impact'); void scene.offsetWidth; scene.classList.add('impact');
       window.setTimeout(()=>scene.classList.remove('impact'),620);
       }
@@ -464,11 +474,12 @@
     document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
     const pulse=Math.pow(Math.max(0,Math.sin(time*(stageIndex>=7?2.4:1.65))),8);
     const breathe=1+Math.sin(time*1.7)*.012*(.5+intensity)+pulse*.014*intensity;
-    angle+=dt*(stageIndex>=7?-.82:stageIndex>=3?.56:.3);
+    // Keep the iris patterns anatomically stable: only subtle gaze and pulse,
+    // never rotate the whole iris (which makes the eyes look like spinning wheels).
     gazeX+=(targetX-gazeX)*clamp(dt*2.7);
     gazeY+=(targetY-gazeY)*clamp(dt*2.7);
     irisMotion.forEach((group,index)=>{
-      group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+') rotate('+angle*57.3+' 170 95)');
+      group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+')');
     });
     pupils.forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2+pulse*1.8).toFixed(2)));
     eyePair.style.setProperty('--gaze-x',gazeX+'px'); eyePair.style.setProperty('--gaze-y',gazeY+'px');
