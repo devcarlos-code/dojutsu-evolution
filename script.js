@@ -233,6 +233,7 @@
     const experience=$('experience');
     experience.classList.remove('power-tier-1','power-tier-2','power-tier-3');
     experience.classList.add('power-tier-'+tier);
+    document.documentElement.dataset.powerTier=tier;
     $('eyeScene').dataset.stage=stage.id;
     eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
