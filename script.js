@@ -243,22 +243,33 @@
     document.documentElement.dataset.powerTier=tier;
     $('eyeScene').dataset.stage=stage.id;
     const scene=$('eyeScene'), experienceRoot=$('experience');
-    scene.classList.remove('stage-enter','stage-transition');
+    const eyeFrames=[...scene.querySelectorAll('.eye-frame')];
+    eyeFrames.forEach(frame=>{if(frame._revealAnimation)frame._revealAnimation.cancel();});
+    scene.classList.remove('stage-enter','stage-transition','impact');
     experienceRoot.classList.remove('stage-shift');
-    void scene.offsetWidth;
-    // Two animation frames ensure the browser registers the closed-eye state
-    // before revealing the newly rendered pattern.
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      scene.classList.add('stage-transition','stage-enter');
-      experienceRoot.classList.add('stage-shift');
-    }));
+    // Replace the iris pattern while the eyes are shut during the WAAPI blink.
+    eyeL.innerHTML = eyeSVG('L',stage);
+    eyeR.innerHTML = eyeSVG('R',stage);
+    const frames=[...scene.querySelectorAll('.eye-frame')];
+    const blinkDuration=reducedMotion?520:1120;
+    frames.forEach((frame,index)=>{
+      frame.style.transformOrigin='50% 50%';
+      frame._revealAnimation=frame.animate([
+        {transform:'scaleY(1) scaleX(1)',filter:'brightness(1)',opacity:1,offset:0},
+        {transform:'scaleY(.12) scaleX(1.035)',filter:'brightness(1.8)',opacity:1,offset:.24},
+        {transform:'scaleY(.015) scaleX(1.06)',filter:'brightness(2.5)',opacity:1,offset:.43},
+        {transform:'scaleY(.015) scaleX(1.06)',filter:'brightness(2.2)',opacity:1,offset:.55},
+        {transform:'scaleY(1.08) scaleX(1.025)',filter:'brightness(1.65)',opacity:1,offset:.78},
+        {transform:'scaleY(1) scaleX(1)',filter:'brightness(1)',opacity:1,offset:1}
+      ],{duration:blinkDuration,delay:index*65,easing:'cubic-bezier(.18,.72,.18,1)',fill:'none'});
+    });
+    scene.classList.add('stage-transition');
+    experienceRoot.classList.add('stage-shift');
     window.clearTimeout(enterStage.animationTimer);
     enterStage.animationTimer=window.setTimeout(()=>{
       scene.classList.remove('stage-enter','stage-transition');
       experienceRoot.classList.remove('stage-shift');
-    },1500);
-    eyeL.innerHTML = eyeSVG('L',stage);
-    eyeR.innerHTML = eyeSVG('R',stage);
+    },blinkDuration+240);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
     fiberGroups = [...eyeL.querySelectorAll('.iris-fibers'), ...eyeR.querySelectorAll('.iris-fibers')];
     pupils = [...eyeL.querySelectorAll('.pupil'), ...eyeR.querySelectorAll('.pupil')];
