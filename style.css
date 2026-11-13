@@ -200,3 +200,9 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
  .eye-scene.stage-transition .scene-ring{animation:none!important}
  .eye-pair{animation:none!important}
 }
+
+/* The blink is driven by Web Animations API; CSS must not override it. */
+.eye-scene.stage-transition .eye-frame{animation:none!important}
+.eye-scene.stage-transition .eye-pair{animation:none!important}
+.eye-frame{transform-origin:50% 50%;backface-visibility:hidden;will-change:transform,filter}
+.eye-frame .iris-motion,.eye-frame .pattern,.eye-frame .pupil{animation:none!important}
