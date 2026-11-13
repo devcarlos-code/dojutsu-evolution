@@ -9,6 +9,9 @@ body{min-height:100svh;overflow-x:hidden;overflow-y:auto}
 button,input{font:inherit}
 button{color:inherit}
 .backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 47%,rgba(var(--accent),.105),transparent 72%),radial-gradient(ellipse at 50% 100%,#1a0c13 0%,#080609 65%)}
+.backdrop__aurora{position:absolute;inset:-25%;opacity:.42;mix-blend-mode:screen;background:conic-gradient(from 0deg at 50% 48%,transparent 0 18%,rgba(var(--accent),.10) 23%,transparent 31% 48%,rgba(115,70,190,.09) 54%,transparent 64% 100%);filter:blur(35px);animation:auroraDrift 28s linear infinite}
+.backdrop__rift{position:absolute;left:50%;top:48%;width:min(92vw,1100px);height:min(48vw,520px);transform:translate(-50%,-50%) rotate(-12deg);border:1px solid rgba(var(--accent),.10);border-radius:50%;box-shadow:0 0 80px rgba(var(--accent),.10),inset 0 0 80px rgba(var(--accent),.06);opacity:.55;animation:riftPulse 8s ease-in-out infinite}
+.backdrop__embers{position:absolute;inset:0;opacity:.24;background-image:radial-gradient(circle,rgba(255,220,190,.65) 0 1px,transparent 1.8px),radial-gradient(circle,rgba(var(--accent),.8) 0 1px,transparent 2px);background-size:137px 151px,211px 197px;background-position:0 0,70px 45px;mask-image:radial-gradient(ellipse at center,black,transparent 75%);animation:emberDrift 24s linear infinite}
 .backdrop__glow{position:absolute;width:min(78vw,1000px);aspect-ratio:1;left:50%;top:48%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(var(--accent),calc(.10 + var(--energy)*.13)),transparent 68%);filter:blur(24px);transition:background 1s ease}
 .backdrop__vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(0,0,0,.38) 75%,#000 130%)}
 .backdrop__grain{position:absolute;inset:-50%;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");transform:translateZ(0)}
@@ -40,7 +43,14 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 .scene-orbit{position:absolute;width:min(62vw,600px);height:75%;border:1px solid rgba(var(--accent),.11);border-radius:50%;transform:rotate(-17deg);opacity:.65}
 .scene-orbit--two{width:min(54vw,510px);height:65%;transform:rotate(17deg);border-style:dotted;opacity:.38}
 .eye-pair{width:100%;display:flex;justify-content:center;align-items:center;gap:clamp(8px,2vw,28px);filter:drop-shadow(0 10px 18px rgba(0,0,0,.65)) drop-shadow(0 0 25px rgba(var(--accent),calc(.25 + var(--energy)*.3))) drop-shadow(0 0 75px rgba(var(--accent),.13));transition:filter .8s;will-change:transform}
-.eye-frame{width:min(43%,440px);position:relative;animation:eyeFloat 6s ease-in-out infinite}
+.eye-frame{width:min(43%,440px);position:relative;animation:eyeFloat 6s ease-in-out infinite;transform-origin:center;will-change:transform,filter}
+.eye-frame:after{content:"";position:absolute;inset:10% 8%;border-radius:50%;background:radial-gradient(ellipse,rgba(var(--accent),.12),transparent 68%);filter:blur(20px);z-index:-1;opacity:.7}
+.stage-enter .eye-frame:first-child{animation:eyeRevealLeft 1.05s cubic-bezier(.16,.8,.2,1) both}
+.stage-enter .eye-frame:last-child{animation:eyeRevealRight 1.05s cubic-bezier(.16,.8,.2,1) both}
+.stage-enter .hero__meta{animation:metaReveal .85s cubic-bezier(.16,.8,.2,1) both}
+.stage-enter .scene-ring--outer{animation:sealReveal 1.15s ease-out both,rotate 90s linear infinite}
+.stage-enter .scene-ring--inner{animation:sealReveal 1.15s .08s ease-out both}
+.stage-shift .control-deck{animation:deckPulse .8s ease-out both}
 .eye-frame:nth-child(2){animation-delay:-3s}
 .eye{width:100%;height:auto;display:block;overflow:visible}
 .eye--right{transform:scaleX(-1)}
@@ -82,6 +92,14 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 .flash-overlay.flash{animation:flash .65s ease-out}
 .announcement{position:fixed;z-index:6;left:50%;top:18%;transform:translate(-50%,-8px);padding:9px 16px;border:1px solid rgba(var(--accent),.32);border-radius:30px;background:rgba(8,5,8,.72);color:rgba(255,255,255,.78);font-size:9px;letter-spacing:.2em;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s;backdrop-filter:blur(10px)}
 .announcement.show{opacity:1;transform:translate(-50%,0)}
+@keyframes auroraDrift{to{transform:rotate(360deg)}}
+@keyframes riftPulse{0%,100%{opacity:.28;scale:.96}50%{opacity:.68;scale:1.04}}
+@keyframes emberDrift{to{background-position:137px -151px,-141px 242px}}
+@keyframes eyeRevealLeft{0%{opacity:0;transform:translate(-90px,18px) scale(.72) rotate(-8deg);filter:blur(12px)}55%{opacity:1;filter:blur(0)}100%{transform:translate(0,0) scale(1) rotate(0)}}
+@keyframes eyeRevealRight{0%{opacity:0;transform:translate(90px,18px) scale(.72) rotate(8deg);filter:blur(12px)}55%{opacity:1;filter:blur(0)}100%{transform:translate(0,0) scale(1) rotate(0)}}
+@keyframes metaReveal{0%{opacity:0;transform:translateY(24px);filter:blur(8px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes sealReveal{0%{opacity:0;scale:.45}65%{opacity:.7}100%{opacity:1;scale:1}}
+@keyframes deckPulse{0%{filter:brightness(1)}35%{filter:brightness(1.35)}100%{filter:brightness(1)}}
 @keyframes rotate{to{transform:translate(-50%,-50%) rotate(360deg)}}
 @keyframes eyeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes flash{0%{opacity:0}12%{opacity:.22}100%{opacity:0}}
@@ -99,7 +117,7 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 @media(max-height:720px) and (min-width:701px){
  .experience{padding-top:12px;padding-bottom:12px}.hero{min-height:350px}.eye-scene{height:260px}.hero__meta{margin-bottom:0}.control-deck{padding-top:14px;padding-bottom:12px}.controls{margin:14px 0}.footer{padding-top:11px}
 }
-@media(prefers-reduced-motion:reduce){
+@media(prefers-reduced-motion:reduce){\n .backdrop__aurora,.backdrop__rift,.backdrop__embers{animation:none!important}\n .stage-enter .eye-frame,.stage-enter .hero__meta,.stage-enter .scene-ring--outer,.stage-enter .scene-ring--inner,.stage-shift .control-deck{animation:none!important}
  *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
  .scene-ring--outer,.eye-frame{animation:none!important}
 }
