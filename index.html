@@ -3,41 +3,104 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
-  <title>Dōjutsu — Obra</title>
+  <meta name="theme-color" content="#080609">
+  <meta name="description" content="Una experiencia cinematográfica a través de la evolución de los Dōjutsu.">
+  <meta name="color-scheme" content="dark">
+  <title>Dōjutsu Evolution — Awakening</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="void"></div>
-  <div class="dark-aura" id="darkAura"></div>
-  <canvas id="fx"></canvas>
+  <div class="backdrop" aria-hidden="true">
+    <div class="backdrop__glow"></div>
+    <div class="backdrop__vignette"></div>
+    <div class="backdrop__grain"></div>
+    <div class="backdrop__runes"></div>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
 
-  <main id="stage">
-    <header class="hud">
-      <div class="title-block">
-        <p class="eyebrow" id="eyebrow">Uchiha</p>
-        <h1 class="title" id="title">Sharingan</h1>
-        <p class="subtitle" id="subtitle">1 Tomoe</p>
+  <main class="experience" id="experience">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Dōjutsu Evolution, inicio">
+        <span class="brand__mark">瞳</span>
+        <span class="brand__name">DŌJUTSU <i>EVOLUTION</i></span>
+      </a>
+      <div class="topbar__right">
+        <span class="live-indicator"><i></i> AWAKENING SEQUENCE</span>
+        <button class="icon-button" id="fullscreenBtn" type="button" aria-label="Activar pantalla completa" title="Pantalla completa">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg>
+        </button>
       </div>
     </header>
 
-    <div class="eyes-container" id="eyesContainer">
-      <div class="eye-slot">
-        <svg class="eye" id="eyeL" viewBox="0 0 340 170"></svg>
+    <section class="hero" aria-label="Evolución del Dōjutsu">
+      <div class="hero__meta">
+        <p class="eyebrow" id="stageEyebrow">CLAN UCHIHA <span>•</span> AWAKENING 01</p>
+        <h1 id="stageTitle">Sharingan</h1>
+        <p class="stage-subtitle" id="stageSubtitle">一 Tomoe</p>
+        <p class="stage-description" id="stageDescription">El primer despertar. Una nueva percepción comienza a abrirse.</p>
       </div>
-      <div class="eye-slot">
-        <svg class="eye" id="eyeR" viewBox="0 0 340 170"></svg>
-      </div>
-    </div>
 
-    <div class="progress-wrap">
-      <div class="progress-bar" id="progress"></div>
-    </div>
+      <div class="eye-scene" id="eyeScene">
+        <div class="scene-ring scene-ring--outer"></div>
+        <div class="scene-ring scene-ring--inner"></div>
+        <div class="scene-orbit scene-orbit--one"></div>
+        <div class="scene-orbit scene-orbit--two"></div>
+        <div class="eye-pair" id="eyePair">
+          <div class="eye-frame"><svg class="eye" id="eyeL" viewBox="0 0 340 190" role="img" aria-label="Ojo izquierdo"></svg></div>
+          <div class="eye-frame"><svg class="eye eye--right" id="eyeR" viewBox="0 0 340 190" role="img" aria-label="Ojo derecho"></svg></div>
+        </div>
+        <div class="scene-flare"></div>
+        <div class="scene-caption">THE EYES THAT TRANSCEND DESTINY</div>
+      </div>
+
+      <div class="stage-index"><span id="stageNumber">01</span><i></i><span id="stageTotal">13</span></div>
+    </section>
+
+    <section class="control-deck" aria-label="Controles de evolución">
+      <div class="timeline">
+        <div class="timeline__labels"><span>EVOLUTION PROGRESS</span><span id="progressLabel">01 / 13</span></div>
+        <div class="timeline__track" id="timelineTrack" role="progressbar" aria-label="Progreso de evolución" aria-valuemin="1" aria-valuemax="13" aria-valuenow="1">
+          <div class="timeline__fill" id="progress"></div>
+          <div class="timeline__ticks" id="timelineTicks"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="control-button control-button--secondary" id="previousBtn" type="button" aria-label="Etapa anterior" title="Anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button class="control-button control-button--primary" id="playBtn" type="button">
+          <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>
+          <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h3v14H8zM15 5h3v14h-3z"/></svg>
+          <span id="playLabel">Iniciar despertar</span>
+        </button>
+        <button class="control-button control-button--secondary" id="nextBtn" type="button" aria-label="Siguiente etapa" title="Siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button class="control-button control-button--secondary" id="restartBtn" type="button" aria-label="Reiniciar secuencia" title="Reiniciar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+
+      <div class="utility-controls">
+        <label class="toggle-control"><input id="autoToggle" type="checkbox" checked><span class="toggle"></span><span>Secuencia automática</span></label>
+        <label class="toggle-control"><input id="soundToggle" type="checkbox"><span class="toggle"></span><span>Audio cinematográfico</span></label>
+        <label class="intensity-control" for="intensityRange"><span>INTENSIDAD</span><input id="intensityRange" type="range" min="0" max="100" value="72"><output id="intensityValue">72%</output></label>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>INSPIRED BY THE WORLD OF NARUTO</span>
+      <span class="footer__center">A JOURNEY BEYOND HUMAN PERCEPTION</span>
+      <span id="motionStatus">VISUAL ENGINE <i>● ONLINE</i></span>
+    </footer>
   </main>
 
-  <script src="script.js"></script>
+  <div class="flash-overlay" id="flashOverlay" aria-hidden="true"></div>
+  <div class="announcement" id="announcement" aria-live="polite"></div>
+  <script src="script.js" defer></script>
 </body>
 </html>
