@@ -46,19 +46,25 @@
     return '<g transform="rotate(' + a + ' 170 95)">' + shape.replaceAll('$R', radius).replaceAll('$S', size) + '</g>';
   }).join('');
 
-  function tomoe(count, radius = 39, fill = '#090307') {
-    const shape = '<path d="M170 95 C153 88 148 70 157 56 C164 44 179 40 190 48 C180 52 174 61 176 71 C178 82 188 88 199 84 C196 99 182 106 170 95Z" fill="' + fill + '"/><circle cx="184" cy="55" r="4.5" fill="' + fill + '"/>';
-    return polar(count, radius, 1, shape);
+  function tomoe(count, radius = 40, fill = '#090307') {
+    // A comma-shaped tomoe anchored to the outer iris ring, never across the pupil.
+    const shape = '<path d="M170 51 C184 47 195 57 194 69 C193 80 184 86 174 83 C181 78 181 69 176 64 C173 61 170 57 170 51Z" fill="' + fill + '"/><circle cx="187" cy="59" r="3.2" fill="' + fill + '"/>';
+    return Array.from({length:count},(_,i)=>'<g transform="rotate('+(i*360/count)+' 170 95)">'+shape+'</g>').join('');
   }
 
   function mangekyo(type) {
-    const shapes = {
-      itachi: '<path d="M170 95 C151 80 151 57 170 34 C189 57 189 80 170 95Z" fill="#080206"/><path d="M170 95 C151 110 128 104 111 82 C139 78 157 82 170 95Z" fill="#080206"/><path d="M170 95 C189 110 212 104 229 82 C201 78 183 82 170 95Z" fill="#080206"/>',
-      sasuke: '<path d="M170 95 L181 34 L192 83 L235 61 L203 101 L235 130 L190 116 L170 158 L150 116 L105 130 L137 101 L105 61 L148 83Z" fill="#080206"/>',
-      madara: '<path d="M170 30 C187 48 193 65 184 82 C204 75 221 80 235 95 C215 108 198 111 181 101 C188 121 180 139 170 157 C160 139 152 121 159 101 C142 111 125 108 105 95 C119 80 136 75 156 82 C147 65 153 48 170 30Z" fill="#080206"/>',
-      obito: '<path d="M170 34 C195 47 202 71 185 95 C202 119 195 143 170 156 C145 143 138 119 155 95 C138 71 145 47 170 34Z" fill="#080206"/><circle cx="170" cy="95" r="17" fill="#b51a24"/>'
-    };
-    return shapes[type] || '';
+    const blades = {
+      itachi: {count:3, inner:25, outer:56, twist:0, color:'#080206'},
+      sasuke: {count:6, inner:22, outer:57, twist:0, color:'#080206'},
+      madara: {count:3, inner:20, outer:58, twist:18, color:'#080206'},
+      obito: {count:3, inner:24, outer:56, twist:60, color:'#080206'}
+    }[type];
+    if(!blades) return '';
+    const petals=Array.from({length:blades.count},(_,i)=>{
+      const a=i*360/blades.count+blades.twist;
+      return '<path d="M170 95 C150 80 151 57 170 37 C189 57 190 80 170 95Z" transform="rotate('+a+' 170 95)" fill="'+blades.color+'"/>';
+    }).join('');
+    return '<g>'+petals+'</g><circle cx="170" cy="95" r="20" fill="#d32824" opacity=".95"/>';
   }
 
   function patternMarkup(type) {
@@ -157,7 +163,7 @@
   let audioContext = null;
   let masterGain = null;
   let ambientNodes = [];
-  let particles = [];
+  let particles = [];\n  let shockwaves = [];\n  let transitionToken = 0;
   let irisMotion = [];
   let pupils = [];
   let width = 0, height = 0, dpr = 1;
@@ -197,7 +203,7 @@
 
   function spawnBurst(color, amount = 46, force = 1) {
     if (reducedMotion || intensity <= 0) return;
-    const cx = width * .5, cy = height * .48;
+    const cx = width * .5, cy = height * .48;\n    shockwaves.push({x:cx,y:cy,r:24,life:1,color});\n    if(shockwaves.length>5) shockwaves.shift();
     const count = Math.round(amount * intensity);
     for(let i=0;i<count;i++){
       const a = Math.random()*Math.PI*2;
@@ -218,7 +224,7 @@
     const stage = STAGES[stageIndex];
     document.documentElement.style.setProperty('--accent',rgb(stage.color));
     document.documentElement.style.setProperty('--accent-soft',rgb(stage.color));
-    eyeL.innerHTML = eyeSVG('L',stage);
+    eyeL.dataset.pattern=stage.pattern; eyeR.dataset.pattern=stage.pattern;\n    eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
     pupils = [...eyeL.querySelectorAll('.pupil'), ...eyeR.querySelectorAll('.pupil')];
@@ -235,7 +241,7 @@
         flashOverlay.classList.remove('flash');
         void flashOverlay.offsetWidth;
         flashOverlay.classList.add('flash');
-        shake = stageIndex>=7 ? .95 : .5;
+        shake = stageIndex>=7 ? 1.25 : .72;
       }
       if(announce) showAnnouncement(stage.title.toUpperCase()+' — AWAKENED');
       playTransitionSound();
@@ -422,7 +428,7 @@
     const energy=intensity*(.55+.45*Math.sin(time*1.35)*.5+.2);
     document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
     const breathe=1+Math.sin(time*1.05)*.006*(.5+intensity);
-    angle+=dt*(stageIndex>=7?-.18:.12);
+    angle+=dt*(stageIndex>=7?-.34:stageIndex>=3?.24:.12);
     gazeX+=(targetX-gazeX)*clamp(dt*2.7);
     gazeY+=(targetY-gazeY)*clamp(dt*2.7);
     irisMotion.forEach((group,index)=>{
