@@ -155,3 +155,11 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 .eye-frame .iris-motion{transform-box:initial;transform-origin:initial}
 .eye-scene .scene-orbit,.eye-scene .scene-ring{pointer-events:none}
 @media(prefers-reduced-motion:reduce){.eye-pair{animation:none!important}}
+
+/* Lock the iris artwork in place. All motion stays in the atmosphere and light. */
+.eye-frame .iris-motion{transform:none!important;transform-box:view-box!important;transform-origin:170px 95px!important;animation:none!important}
+.eye-frame .pattern,.eye-frame .pupil{transform:none!important;animation:none!important}
+.eye-frame .sclera-veins{opacity:.82;filter:drop-shadow(0 0 1px rgba(105,12,25,.3))}
+.eye-frame .sclera-veins path{animation:veinGlow 5s ease-in-out infinite}
+.eye-frame .eye{filter:drop-shadow(0 5px 5px rgba(0,0,0,.65))}
+@keyframes veinGlow{0%,100%{opacity:.48}50%{opacity:.9}}
