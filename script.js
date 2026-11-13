@@ -229,6 +229,11 @@
     document.documentElement.style.setProperty('--accent',rgb(stage.color));
     document.documentElement.style.setProperty('--accent-soft',rgb(stage.color));
     eyeL.dataset.pattern=stage.pattern; eyeR.dataset.pattern=stage.pattern;
+    const tier=stageIndex>=7?'3':stageIndex>=3?'2':'1';
+    const experience=$('experience');
+    experience.classList.remove('power-tier-1','power-tier-2','power-tier-3');
+    experience.classList.add('power-tier-'+tier);
+    $('eyeScene').dataset.stage=stage.id;
     eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
@@ -241,12 +246,15 @@
     makeTicks();
     updateProgress(stageIndex / STAGES.length);
     if(stageIndex>0){
-      spawnBurst(stage.color,stageIndex>=7?76:48,stageIndex>=7?1.35:1);
+      spawnBurst(stage.color,stageIndex>=7?150:stageIndex>=3?112:76,stageIndex>=7?2.0:stageIndex>=3?1.55:1.2);
       if(!reducedMotion){
         flashOverlay.classList.remove('flash');
         void flashOverlay.offsetWidth;
         flashOverlay.classList.add('flash');
-        shake = stageIndex>=7 ? 1.25 : .72;
+        shake = stageIndex>=7 ? 2.4 : stageIndex>=3 ? 1.65 : .95;
+      const scene=$('eyeScene');
+      scene.classList.remove('impact'); void scene.offsetWidth; scene.classList.add('impact');
+      window.setTimeout(()=>scene.classList.remove('impact'),620);
       }
       if(announce) showAnnouncement(stage.title.toUpperCase()+' — AWAKENED');
       playTransitionSound();
@@ -307,63 +315,74 @@
   }
 
   function setupAudio() {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
     if(!AudioCtx) return false;
     if(!audioContext){
-      audioContext = new AudioCtx();
-      masterGain = audioContext.createGain();
-      masterGain.gain.value = 0;
+      audioContext=new AudioCtx();
+      masterGain=audioContext.createGain();
+      masterGain.gain.value=0;
       masterGain.connect(audioContext.destination);
-      const filter = audioContext.createBiquadFilter();
-      filter.type='lowpass';filter.frequency.value=210;filter.Q.value=.7;
-      filter.connect(masterGain);
-      [55,82.41,110].forEach((frequency,index)=>{
-        const osc=audioContext.createOscillator();
-        const gain=audioContext.createGain();
-        osc.type=index===1?'triangle':'sine';
+      const droneFilter=audioContext.createBiquadFilter();
+      droneFilter.type='lowpass';droneFilter.frequency.value=260;droneFilter.Q.value=.8;
+      droneFilter.connect(masterGain);
+      [41.2,55,82.41,110].forEach((frequency,index)=>{
+        const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+        osc.type=['sine','triangle','sine','triangle'][index];
         osc.frequency.value=frequency;
-        gain.gain.value=[.22,.08,.035][index];
-        osc.connect(gain);gain.connect(filter);osc.start();
+        gain.gain.value=[.16,.075,.035,.018][index];
+        osc.connect(gain);gain.connect(droneFilter);osc.start();
         ambientNodes.push({osc,gain});
       });
     }
     return true;
   }
 
-  function setSound(enabled) {
-    soundEnabled=enabled;
-    if(!enabled){
-      if(audioContext&&masterGain){
-        masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.12);
-        audioContext.suspend();
-      }
-      return;
-    }
-    if(!setupAudio()){
-      soundToggle.checked=false;
-      soundEnabled=false;
-      showAnnouncement('AUDIO NO DISPONIBLE EN ESTE NAVEGADOR');
-      return;
-    }
-    audioContext.resume().then(()=>{
-      if(soundEnabled) masterGain.gain.setTargetAtTime(.18,audioContext.currentTime,.5);
-    }).catch(()=>{soundToggle.checked=false;soundEnabled=false;});
+  function makeNoiseBuffer(){
+    const length=Math.floor(audioContext.sampleRate*.9);
+    const buffer=audioContext.createBuffer(1,length,audioContext.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*(1-i/length);
+    return buffer;
   }
 
-  function playTransitionSound() {
+  function playTransitionSound(){
     if(!soundEnabled||!audioContext) return;
     if(audioContext.state==='suspended') audioContext.resume();
     const now=audioContext.currentTime;
-    const osc=audioContext.createOscillator();
-    const gain=audioContext.createGain();
-    const filter=audioContext.createBiquadFilter();
-    const base=stageIndex>=7?95:stageIndex>=3?130:170;
-    osc.type='sawtooth';
-    osc.frequency.setValueAtTime(base*2.2,now);
-    osc.frequency.exponentialRampToValueAtTime(base,now+.55);
-    filter.type='lowpass';filter.frequency.setValueAtTime(1200,now);filter.frequency.exponentialRampToValueAtTime(180,now+.65);
-    gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.11,now+.06);gain.gain.exponentialRampToValueAtTime(.0001,now+.72);
-    osc.connect(filter);filter.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+.75);
+    const tier=stageIndex>=7?3:stageIndex>=3?2:1;
+    const base=[0,155,112,78][tier]+(stageIndex%4)*9;
+    const master=masterGain;
+    // Deep impact: short sub-bass drop.
+    const sub=audioContext.createOscillator(),subGain=audioContext.createGain();
+    sub.type='sine';sub.frequency.setValueAtTime(base*1.7,now);
+    sub.frequency.exponentialRampToValueAtTime(Math.max(32,base*.48),now+.42);
+    subGain.gain.setValueAtTime(.0001,now);
+    subGain.gain.exponentialRampToValueAtTime(.32,now+.025);
+    subGain.gain.exponentialRampToValueAtTime(.0001,now+.62);
+    sub.connect(subGain);subGain.connect(master);sub.start(now);sub.stop(now+.64);
+    // Wide filtered energy sweep.
+    const noise=audioContext.createBufferSource(),noiseFilter=audioContext.createBiquadFilter(),noiseGain=audioContext.createGain();
+    noise.buffer=makeNoiseBuffer();noiseFilter.type='bandpass';
+    noiseFilter.frequency.setValueAtTime(2400+stageIndex*90,now);
+    noiseFilter.frequency.exponentialRampToValueAtTime(180,now+.58);
+    noiseFilter.Q.value=.65;
+    noiseGain.gain.setValueAtTime(.0001,now);
+    noiseGain.gain.exponentialRampToValueAtTime(tier===3?.20:.13,now+.045);
+    noiseGain.gain.exponentialRampToValueAtTime(.0001,now+.68);
+    noise.connect(noiseFilter);noiseFilter.connect(noiseGain);noiseGain.connect(master);
+    noise.start(now);noise.stop(now+.7);
+    // A rising harmonic shimmer gives each eye its own awakening signature.
+    const shimmer=audioContext.createOscillator(),shineGain=audioContext.createGain(),shineFilter=audioContext.createBiquadFilter();
+    shimmer.type='triangle';
+    shimmer.frequency.setValueAtTime(360+stageIndex*24,now+.04);
+    shimmer.frequency.exponentialRampToValueAtTime(980+stageIndex*35,now+.38);
+    shimmer.frequency.exponentialRampToValueAtTime(520+stageIndex*18,now+.9);
+    shineFilter.type='highpass';shineFilter.frequency.value=300;
+    shineGain.gain.setValueAtTime(.0001,now);
+    shineGain.gain.exponentialRampToValueAtTime(.075,now+.16);
+    shineGain.gain.exponentialRampToValueAtTime(.0001,now+1.05);
+    shimmer.connect(shineFilter);shineFilter.connect(shineGain);shineGain.connect(master);
+    shimmer.start(now);shimmer.stop(now+1.08);
   }
 
   function setPlaying(value) {
@@ -442,14 +461,17 @@
     const stage=STAGES[stageIndex];
     const energy=intensity*(.55+.45*Math.sin(time*1.35)*.5+.2);
     document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
-    const breathe=1+Math.sin(time*1.05)*.006*(.5+intensity);
-    angle+=dt*(stageIndex>=7?-.34:stageIndex>=3?.24:.12);
+    const pulse=Math.pow(Math.max(0,Math.sin(time*(stageIndex>=7?2.4:1.65))),8);
+    const breathe=1+Math.sin(time*1.7)*.012*(.5+intensity)+pulse*.014*intensity;
+    angle+=dt*(stageIndex>=7?-.82:stageIndex>=3?.56:.3);
     gazeX+=(targetX-gazeX)*clamp(dt*2.7);
     gazeY+=(targetY-gazeY)*clamp(dt*2.7);
     irisMotion.forEach((group,index)=>{
       group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+') rotate('+angle*57.3+' 170 95)');
     });
-    pupils.forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2).toFixed(2)));
+    pupils.forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2+pulse*1.8).toFixed(2)));
+    eyePair.style.setProperty('--gaze-x',gazeX+'px'); eyePair.style.setProperty('--gaze-y',gazeY+'px');
+    eyePair.style.setProperty('--eye-pulse',(1+pulse*.018*intensity).toFixed(3));
     if(shake>0&&!reducedMotion){
       shake=Math.max(0,shake-dt*2.8);
       const amount=shake*shake*5;
