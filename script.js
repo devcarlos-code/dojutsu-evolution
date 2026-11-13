@@ -173,6 +173,7 @@
   let shockwaves = [];
   let transitionToken = 0;
   let irisMotion = [];
+  let fiberGroups = [];
   let pupils = [];
   let width = 0, height = 0, dpr = 1;
 
@@ -242,19 +243,24 @@
     document.documentElement.dataset.powerTier=tier;
     $('eyeScene').dataset.stage=stage.id;
     const scene=$('eyeScene'), experienceRoot=$('experience');
-    scene.classList.remove('stage-enter');
+    scene.classList.remove('stage-enter','stage-transition');
     experienceRoot.classList.remove('stage-shift');
     void scene.offsetWidth;
-    scene.classList.add('stage-enter');
-    experienceRoot.classList.add('stage-shift');
+    // Two animation frames ensure the browser registers the closed-eye state
+    // before revealing the newly rendered pattern.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      scene.classList.add('stage-transition','stage-enter');
+      experienceRoot.classList.add('stage-shift');
+    }));
     window.clearTimeout(enterStage.animationTimer);
     enterStage.animationTimer=window.setTimeout(()=>{
-      scene.classList.remove('stage-enter');
+      scene.classList.remove('stage-enter','stage-transition');
       experienceRoot.classList.remove('stage-shift');
-    },1250);
+    },1500);
     eyeL.innerHTML = eyeSVG('L',stage);
     eyeR.innerHTML = eyeSVG('R',stage);
     irisMotion = [...eyeL.querySelectorAll('.iris-motion'), ...eyeR.querySelectorAll('.iris-motion')];
+    fiberGroups = [...eyeL.querySelectorAll('.iris-fibers'), ...eyeR.querySelectorAll('.iris-fibers')];
     pupils = [...eyeL.querySelectorAll('.pupil'), ...eyeR.querySelectorAll('.pupil')];
     eyebrow.innerHTML = stage.clan + ' <span>•</span> AWAKENING ' + String(stageIndex+1).padStart(2,'0');
     title.textContent = stage.title;
@@ -479,9 +485,13 @@
     document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
     const pulse=Math.pow(Math.max(0,Math.sin(time*(stageIndex>=7?2.4:1.65))),8);
     const breathe=1+Math.sin(time*1.7)*.012*(.5+intensity)+pulse*.014*intensity;
-    // Iris artwork stays locked to the center of the eye.
-    // Motion is limited to light, particles and the outer scene.
-    pupils.forEach(pupil=>pupil.setAttribute('r',(12+pulse*.35).toFixed(2)));
+    // Keep tomoe / Mangekyo geometry fixed. Animate only radial fibers and pupil response.
+    fiberGroups.forEach((group,index)=>{
+      const fiberAngle=Math.sin(time*.42+index*.7)*2.4;
+      group.setAttribute('transform','rotate('+fiberAngle+' 170 95)');
+      group.style.opacity=String(.48+.24*(.5+.5*Math.sin(time*1.8+index)));
+    });
+    pupils.forEach(pupil=>pupil.setAttribute('r',(12+Math.sin(time*1.8)*.7+pulse*.8).toFixed(2)));
 
     if(shake>0&&!reducedMotion){
       shake=Math.max(0,shake-dt*2.8);
