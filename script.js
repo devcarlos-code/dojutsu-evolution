@@ -1,400 +1,431 @@
 (() => {
   'use strict';
 
-  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-  const lerp = (a, b, t) => a + (b - a) * t;
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, min = 0, max = 1) => Math.max(min, Math.min(max, v));
+  const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, x) => {
-    const t = clamp((x - a) / (b - a));
-    return t * t * (3 - 2 * t);
+    const n = clamp((x - a) / (b - a));
+    return n * n * (3 - 2 * n);
   };
-  const rgb = c => `${c[0]},${c[1]},${c[2]}`;
+  const rgb = (c) => c.join(',');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const RED    = [255, 38, 28];
-  const ORANGE = [255, 85, 35];
-  const PURPLE = [165, 105, 255];
-  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const C = {
+    crimson: [255, 48, 38],
+    ember: [255, 91, 55],
+    violet: [174, 116, 255],
+    blue: [94, 190, 255],
+    pearl: [190, 222, 255],
+    scarlet: [255, 35, 65]
+  };
 
-  /* ===================== STAGES ===================== */
   const STAGES = [
-    { id: 't1',     name: 'Sharingan', sub: '1 Tomoe',            color: RED,    hold: 1.9 },
-    { id: 't2',     name: 'Sharingan', sub: '2 Tomoe',            color: RED,    hold: 1.9 },
-    { id: 't3',     name: 'Sharingan', sub: '3 Tomoe',            color: RED,    hold: 2.2 },
-    { id: 'itachi', name: 'Itachi',    sub: 'Mangekyō Sharingan', color: ORANGE, hold: 2.6 },
-    { id: 'sasuke', name: 'Sasuke',    sub: 'Mangekyō Sharingan', color: ORANGE, hold: 2.6 },
-    { id: 'madara', name: 'Madara',    sub: 'Mangekyō Sharingan', color: ORANGE, hold: 2.5 },
-    { id: 'obito',  name: 'Obito',     sub: 'Mangekyō Sharingan', color: ORANGE, hold: 2.5 },
-    { id: 'rinne',  name: 'Rinnegan',  sub: 'El ojo de los dioses', color: PURPLE, hold: 3.4 }
+    { id:'tomoe1', clan:'CLAN UCHIHA', title:'Sharingan', subtitle:'一 Tomoe', description:'El primer despertar. Una nueva percepción comienza a abrirse.', color:C.crimson, duration:4.2, pattern:'tomoe1' },
+    { id:'tomoe2', clan:'CLAN UCHIHA', title:'Sharingan', subtitle:'二 Tomoe', description:'La percepción se agudiza. Cada movimiento deja de ser un misterio.', color:C.crimson, duration:4.2, pattern:'tomoe2' },
+    { id:'tomoe3', clan:'CLAN UCHIHA', title:'Sharingan', subtitle:'三 Tomoe', description:'El Sharingan alcanza su forma completa y revela todo su potencial.', color:C.crimson, duration:4.6, pattern:'tomoe3' },
+    { id:'itachi', clan:'ITACHI UCHIHA', title:'Mangekyō Sharingan', subtitle:'万華鏡写輪眼 · Itachi', description:'Un patrón único despierta entre llamas y recuerdos.', color:C.ember, duration:4.8, pattern:'itachi' },
+    { id:'sasuke', clan:'SASUKE UCHIHA', title:'Mangekyō Sharingan', subtitle:'万華鏡写輪眼 · Sasuke', description:'Una estrella afilada toma forma en el centro del iris.', color:C.ember, duration:4.8, pattern:'sasuke' },
+    { id:'madara', clan:'MADARA UCHIHA', title:'Mangekyō Sharingan', subtitle:'万華鏡写輪眼 · Madara', description:'Un diseño ancestral gira con una presencia imponente.', color:C.crimson, duration:4.8, pattern:'madara' },
+    { id:'obito', clan:'OBITO UCHIHA', title:'Mangekyō Sharingan', subtitle:'万華鏡写輪眼 · Obito', description:'El espacio parece doblarse alrededor de una mirada imposible.', color:C.ember, duration:4.8, pattern:'obito' },
+    { id:'rinnegan', clan:'EL OJO DE LOS SEIS CAMINOS', title:'Rinnegan', subtitle:'輪廻眼', description:'Los anillos del poder legendario despiertan en un resplandor violeta.', color:C.violet, duration:5.4, pattern:'rinnegan' },
+    { id:'eternal', clan:'UCHIHA · EVOLUCIÓN ETERNA', title:'Eternal Mangekyō', subtitle:'永遠の万華鏡写輪眼', description:'Dos destinos se funden en un patrón eterno.', color:C.ember, duration:5.0, pattern:'eternal' },
+    { id:'sixpaths', clan:'PODER DE LOS SEIS CAMINOS', title:'Six Tomoe Rinnegan', subtitle:'六勾玉輪廻眼', description:'Seis tomoe rodean los anillos de un poder superior.', color:C.violet, duration:5.2, pattern:'sixpaths' },
+    { id:'tenseigan', clan:'ŌTSUTSUKI', title:'Tenseigan', subtitle:'転生眼', description:'Una energía celestial azul ilumina el ojo con una calma abrumadora.', color:C.blue, duration:5.2, pattern:'tenseigan' },
+    { id:'jogan', clan:'EL OJO PURO', title:'Jōgan', subtitle:'浄眼', description:'Una mirada azul y misteriosa percibe aquello que permanece oculto.', color:C.pearl, duration:5.2, pattern:'jogan' },
+    { id:'rinneSharingan', clan:'PODER DIVINO', title:'Rinne Sharingan', subtitle:'輪廻写輪眼', description:'El despertar final: un ojo de poder ancestral que trasciende toda evolución.', color:C.scarlet, duration:6.0, pattern:'rinneSharingan' }
   ];
 
-  let total = 0;
-  STAGES.forEach(s => {
-    s.start = total;
-    total += s.hold + 0.7;
-    s.end = total;
-  });
-  const END = total + 0.5;
+  const eyePath = 'M15 95 C48 35 105 12 170 12 C235 12 292 35 325 95 C292 155 235 178 170 178 C105 178 48 155 15 95Z';
+  const polar = (count, radius, size, shape) => Array.from({length:count}, (_,i) => {
+    const a = i * 360 / count;
+    return '<g transform="rotate(' + a + ' 170 95)">' + shape.replaceAll('$R', radius).replaceAll('$S', size) + '</g>';
+  }).join('');
 
-  /* ===================== SHARP EYE SHAPE ===================== */
-  const eyePath = `
-    M18 85
-    C40 32 95 8 170 8
-    C245 8 300 32 322 85
-    C300 138 245 162 170 162
-    C95 162 40 138 18 85Z`;
-
-  /* ===================== PATTERNS ===================== */
-  function tomoe(count) {
-    const angs = count === 1 ? [0] : count === 2 ? [-50, 50] : [0, 120, 240];
-    return angs.map(a => `
-      <g transform="rotate(${a} 170 85)">
-        <path d="M170 44
-                 C156 44 145 54 145 67
-                 C145 78 154 85 166 85
-                 C161 76 163 64 170 58
-                 C177 64 179 76 174 85
-                 C186 85 195 78 195 67
-                 C195 54 184 44 170 44Z" fill="#0c0206"/>
-        <circle cx="170" cy="61" r="5.2" fill="#0c0206"/>
-      </g>`).join('');
+  function tomoe(count, radius = 39, fill = '#090307') {
+    const shape = '<path d="M170 95 C153 88 148 70 157 56 C164 44 179 40 190 48 C180 52 174 61 176 71 C178 82 188 88 199 84 C196 99 182 106 170 95Z" fill="' + fill + '"/><circle cx="184" cy="55" r="4.5" fill="' + fill + '"/>';
+    return polar(count, radius, 1, shape);
   }
 
-  const itachi = [0,120,240].map(a => `
-    <g transform="rotate(${a} 170 85)">
-      <path d="M170 30
-               C153 30 138 44 136 60
-               C134 76 146 90 163 94
-               C158 78 160 62 170 50
-               C180 62 182 78 177 94
-               C194 90 206 76 204 60
-               C202 44 187 30 170 30Z" fill="#0a0205"/>
-      <path d="M170 38 C158 38 149 47 148 58" fill="none" stroke="#ff7a48" stroke-width="2.4" stroke-opacity=".5"/>
-    </g>`).join('');
-
-  const sasuke = [0,120,240].map(a => `
-    <g transform="rotate(${a} 170 85)">
-      <path d="M170 32 L192 72 L172 66 L198 102 L168 82 L176 118 L170 100 L164 118 L162 82 L132 102 L158 66 L148 72Z" fill="#0a0205"/>
-    </g>`).join('');
-
-  const madara = [0,120,240].map(a => `
-    <g transform="rotate(${a} 170 85)">
-      <path d="M170 28
-               C150 28 132 45 130 64
-               C128 84 144 100 165 104
-               C159 86 161 66 170 52
-               C179 66 181 86 175 104
-               C196 100 212 84 210 64
-               C208 45 190 28 170 28Z" fill="#090205"/>
-      <circle cx="170" cy="50" r="4.2" fill="#150408"/>
-    </g>`).join('');
-
-  const obito = [0,120,240].map(a => `
-    <g transform="rotate(${a} 170 85)">
-      <path d="M170 34
-               C158 34 148 43 146 55
-               C144 68 154 80 167 84
-               C163 70 165 56 170 50
-               C175 56 177 70 173 84
-               C186 80 196 68 194 55
-               C192 43 182 34 170 34Z" fill="#0a0205"/>
-      <path d="M170 40 C160 40 153 47 152 56" fill="none" stroke="#ff6e40" stroke-width="2.1" stroke-opacity=".48"/>
-    </g>`).join('');
-
-  const rinne = `
-    <circle cx="170" cy="85" r="56" fill="none" stroke="#261440" stroke-width="3.8"/>
-    <circle cx="170" cy="85" r="45" fill="none" stroke="#3a2260" stroke-width="2.4"/>
-    <circle cx="170" cy="85" r="34" fill="none" stroke="#261440" stroke-width="2.3"/>
-    <circle cx="170" cy="85" r="24" fill="none" stroke="#3a2260" stroke-width="2"/>
-    <circle cx="170" cy="85" r="14" fill="none" stroke="#261440" stroke-width="1.8"/>
-    <circle cx="170" cy="85" r="6.5" fill="#140a24"/>
-  `;
-
-  /* ===================== BUILD EYE ===================== */
-  function buildEye(svg, side) {
-    const id = side;
-    svg.innerHTML = `
-      <defs>
-        <radialGradient id="irisRed-${id}" cx="0.38" cy="0.32" r="0.72">
-          <stop offset="0%"   stop-color="#ff9a72"/>
-          <stop offset="18%"  stop-color="#f03a28"/>
-          <stop offset="45%"  stop-color="#b01014"/>
-          <stop offset="72%"  stop-color="#5c060c"/>
-          <stop offset="100%" stop-color="#180208"/>
-        </radialGradient>
-        <radialGradient id="irisPurp-${id}" cx="0.38" cy="0.32" r="0.72">
-          <stop offset="0%"   stop-color="#f0e0ff"/>
-          <stop offset="20%"  stop-color="#c090f0"/>
-          <stop offset="50%"  stop-color="#7a40c0"/>
-          <stop offset="78%"  stop-color="#3a1860"/>
-          <stop offset="100%" stop-color="#12081e"/>
-        </radialGradient>
-        <filter id="soft-${id}">
-          <feGaussianBlur stdDeviation="1.2"/>
-        </filter>
-      </defs>
-
-      <path d="${eyePath}" fill="#050205" stroke="#0a060a" stroke-width="2.5"/>
-      <path d="${eyePath}" fill="#f5efeb"/>
-
-      <path d="M30 82 C70 28 120 12 170 12 C220 12 270 28 310 82"
-            fill="none" stroke="#000" stroke-width="18" stroke-linecap="round" opacity="0.18"/>
-
-      <g class="iris-group">
-        <circle class="iris-base" cx="170" cy="85" r="58" fill="url(#irisRed-${id})"/>
-        <circle cx="170" cy="85" r="58" fill="none" stroke="#1a0508" stroke-width="3.5"/>
-        <circle cx="170" cy="85" r="46" fill="none" stroke="#ffb090" stroke-width="1.4" stroke-opacity="0.18"/>
-
-        <g class="fibers" stroke="#ffc0a0" stroke-opacity="0.13" stroke-width="0.9">
-          ${Array.from({length: 48}, (_, i) => {
-            const a = (i / 48) * 360;
-            return `<path d="M170 85 L170 32" transform="rotate(${a} 170 85)"/>`;
-          }).join('')}
-        </g>
-
-        <g class="spin">
-          <g class="pat t1"     opacity="0">${tomoe(1)}</g>
-          <g class="pat t2"     opacity="0">${tomoe(2)}</g>
-          <g class="pat t3"     opacity="0">${tomoe(3)}</g>
-          <g class="pat itachi" opacity="0">${itachi}</g>
-          <g class="pat sasuke" opacity="0">${sasuke}</g>
-          <g class="pat madara" opacity="0">${madara}</g>
-          <g class="pat obito"  opacity="0">${obito}</g>
-        </g>
-        <g class="pat rinne" opacity="0">${rinne}</g>
-
-        <circle class="pupil" cx="170" cy="85" r="13" fill="#030105"/>
-        <circle cx="170" cy="85" r="13" fill="none" stroke="#000" stroke-width="1.5" opacity="0.5"/>
-
-        <ellipse class="hl" cx="148" cy="64" rx="13" ry="7" fill="#fff" opacity="0.78"
-                 transform="rotate(-32 148 64)"/>
-        <circle cx="192" cy="98" r="3.8" fill="#fff" opacity="0.28"/>
-      </g>
-
-      <path d="M22 84 C55 28 110 6 170 6 C230 6 285 28 318 84"
-            fill="none" stroke="#000" stroke-width="16" stroke-linecap="round" opacity="0.75"/>
-      <path d="M26 88 C65 140 120 160 170 160 C220 160 275 140 314 88"
-            fill="none" stroke="#000" stroke-width="11" stroke-linecap="round" opacity="0.55"/>
-
-      <path d="M38 58 C32 48 28 40 30 32" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" opacity="0.7"/>
-      <path d="M58 42 C54 32 52 24 56 18" fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round" opacity="0.55"/>
-    `;
-  }
-
-  const eyeL = document.getElementById('eyeL');
-  const eyeR = document.getElementById('eyeR');
-  buildEye(eyeL, 'L');
-  buildEye(eyeR, 'R');
-
-  function cache(svg) {
-    return {
-      group: svg.querySelector('.iris-group'),
-      iris: svg.querySelector('.iris-base'),
-      spin: svg.querySelector('.spin'),
-      pupil: svg.querySelector('.pupil'),
-      hl: svg.querySelector('.hl'),
-      pats: {
-        t1: svg.querySelector('.t1'),
-        t2: svg.querySelector('.t2'),
-        t3: svg.querySelector('.t3'),
-        itachi: svg.querySelector('.itachi'),
-        sasuke: svg.querySelector('.sasuke'),
-        madara: svg.querySelector('.madara'),
-        obito: svg.querySelector('.obito'),
-        rinne: svg.querySelector('.rinne')
-      }
+  function mangekyo(type) {
+    const shapes = {
+      itachi: '<path d="M170 95 C151 80 151 57 170 34 C189 57 189 80 170 95Z" fill="#080206"/><path d="M170 95 C151 110 128 104 111 82 C139 78 157 82 170 95Z" fill="#080206"/><path d="M170 95 C189 110 212 104 229 82 C201 78 183 82 170 95Z" fill="#080206"/>',
+      sasuke: '<path d="M170 95 L181 34 L192 83 L235 61 L203 101 L235 130 L190 116 L170 158 L150 116 L105 130 L137 101 L105 61 L148 83Z" fill="#080206"/>',
+      madara: '<path d="M170 30 C187 48 193 65 184 82 C204 75 221 80 235 95 C215 108 198 111 181 101 C188 121 180 139 170 157 C160 139 152 121 159 101 C142 111 125 108 105 95 C119 80 136 75 156 82 C147 65 153 48 170 30Z" fill="#080206"/>',
+      obito: '<path d="M170 34 C195 47 202 71 185 95 C202 119 195 143 170 156 C145 143 138 119 155 95 C138 71 145 47 170 34Z" fill="#080206"/><circle cx="170" cy="95" r="17" fill="#b51a24"/>'
     };
+    return shapes[type] || '';
   }
-  const eyes = [cache(eyeL), cache(eyeR)];
 
-  const titleEl = document.getElementById('title');
-  const subEl = document.getElementById('subtitle');
-  const progressEl = document.getElementById('progress');
-  const eyesContainer = document.getElementById('eyesContainer');
-
-  const canvas = document.getElementById('fx');
-  const ctx = canvas.getContext('2d', { alpha: true });
-  let W, H, DPR = 1;
-
-  function resize() {
-    DPR = Math.min(2, devicePixelRatio || 1);
-    W = canvas.width = Math.round(innerWidth * DPR);
-    H = canvas.height = Math.round(innerHeight * DPR);
-    canvas.style.width = innerWidth + 'px';
-    canvas.style.height = innerHeight + 'px';
+  function patternMarkup(type) {
+    switch(type) {
+      case 'tomoe1': return tomoe(1, 38);
+      case 'tomoe2': return tomoe(2, 39);
+      case 'tomoe3': return tomoe(3, 40);
+      case 'itachi': return mangekyo('itachi');
+      case 'sasuke': return mangekyo('sasuke');
+      case 'madara': return mangekyo('madara');
+      case 'obito': return mangekyo('obito');
+      case 'rinnegan':
+        return '<g fill="none" stroke="#271340"><circle cx="170" cy="95" r="53" stroke-width="5"/><circle cx="170" cy="95" r="42" stroke-width="3.5"/><circle cx="170" cy="95" r="30" stroke-width="3"/><circle cx="170" cy="95" r="18" stroke-width="2.5"/></g><circle cx="170" cy="95" r="7" fill="#160a25"/>';
+      case 'eternal':
+        return '<g>' + mangekyo('itachi') + '<g transform="rotate(60 170 95)">' + mangekyo('obito') + '</g></g><circle cx="170" cy="95" r="20" fill="none" stroke="#ff795e" stroke-width="2" opacity=".7"/>';
+      case 'sixpaths':
+        return '<g fill="none" stroke="#2b1745"><circle cx="170" cy="95" r="56" stroke-width="4"/><circle cx="170" cy="95" r="44" stroke-width="3"/><circle cx="170" cy="95" r="31" stroke-width="2.5"/><circle cx="170" cy="95" r="18" stroke-width="2"/></g>' + tomoe(6, 47, '#160b22');
+      case 'tenseigan':
+        return '<g fill="none" stroke="#a7e6ff"><circle cx="170" cy="95" r="55" stroke-width="2" opacity=".8"/><circle cx="170" cy="95" r="43" stroke-width="2"/><circle cx="170" cy="95" r="31" stroke-width="1.5"/><path d="M170 38 L180 85 L227 95 L180 105 L170 152 L160 105 L113 95 L160 85Z" stroke-width="2.5"/><path d="M170 52V138M127 95H213" stroke-width="1" opacity=".6"/></g><circle cx="170" cy="95" r="10" fill="#d9f6ff"/>';
+      case 'jogan':
+        return '<g fill="none" stroke="#d8f5ff"><ellipse cx="170" cy="95" rx="52" ry="48" stroke-width="2"/><ellipse cx="170" cy="95" rx="37" ry="34" stroke-width="2"/><path d="M170 43 C198 68 198 122 170 147 C142 122 142 68 170 43Z" stroke-width="2"/><path d="M122 95H218M170 50V140" stroke-width="1.5" opacity=".7"/></g><circle cx="170" cy="95" r="13" fill="#081a2a"/><circle cx="170" cy="95" r="5" fill="#d9f6ff"/>';
+      case 'rinneSharingan':
+        return '<g fill="none" stroke="#31030e"><circle cx="170" cy="95" r="57" stroke-width="4"/><circle cx="170" cy="95" r="45" stroke-width="3"/><circle cx="170" cy="95" r="33" stroke-width="2.5"/><circle cx="170" cy="95" r="21" stroke-width="2"/><path d="M170 38 L182 83 L227 95 L182 107 L170 152 L158 107 L113 95 L158 83Z" stroke-width="2"/></g>' + tomoe(9, 49, '#170208') + '<circle cx="170" cy="95" r="8" fill="#170208"/>';
+      default: return '';
+    }
   }
-  addEventListener('resize', resize, { passive: true });
-  resize();
 
-  const particles = [];
-  function burst(color, count = 36, power = 1.3) {
-    const cx = W * 0.5;
-    const cy = H * 0.47;
-    for (let i = 0; i < count; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const spd = (1.8 + Math.random() * 5.5) * power;
+  function eyeSVG(side, stage) {
+    const id = side;
+    const purple = stage.color === C.violet || stage.color === C.blue || stage.color === C.pearl;
+    const irisA = purple ? '#f0f6ff' : '#ffb49b';
+    const irisB = purple ? (stage.color === C.blue || stage.color === C.pearl ? '#4daddf' : '#a36be5') : '#d32824';
+    const irisC = purple ? '#172b55' : '#510710';
+    const grad = 'iris-' + id;
+    return '<defs>' +
+      '<radialGradient id="' + grad + '" cx=".38" cy=".32" r=".72"><stop offset="0" stop-color="' + irisA + '"/><stop offset=".18" stop-color="' + irisB + '"/><stop offset=".65" stop-color="' + irisC + '"/><stop offset="1" stop-color="#080309"/></radialGradient>' +
+      '<clipPath id="clip-' + id + '"><path d="' + eyePath + '"/></clipPath>' +
+      '<filter id="glow-' + id + '" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3"/></filter>' +
+      '</defs>' +
+      '<path d="' + eyePath + '" fill="#050307" stroke="#171016" stroke-width="4"/>' +
+      '<path d="' + eyePath + '" fill="#eee9e5"/>' +
+      '<g clip-path="url(#clip-' + id + ')">' +
+        '<path d="M15 95 C48 35 105 12 170 12 C235 12 292 35 325 95" fill="none" stroke="#080509" stroke-width="17" opacity=".25"/>' +
+        '<g class="iris-motion">' +
+          '<circle cx="170" cy="95" r="59" fill="url(#' + grad + ')"/>' +
+          '<circle cx="170" cy="95" r="59" fill="none" stroke="#17060a" stroke-width="3"/>' +
+          '<circle cx="170" cy="95" r="49" fill="none" stroke="' + irisA + '" stroke-opacity=".25" stroke-width="1.2"/>' +
+          '<g class="iris-fibers" stroke="' + irisA + '" stroke-opacity=".16" stroke-width="1">' +
+            Array.from({length:72},(_,i)=>'<path d="M170 95L170 39" transform="rotate('+(i*5)+' 170 95)"/>').join('') +
+          '</g>' +
+          '<g class="pattern">' + patternMarkup(stage.pattern) + '</g>' +
+          '<circle class="pupil" cx="170" cy="95" r="12" fill="#030205"/>' +
+          '<circle cx="170" cy="95" r="12" fill="none" stroke="#000" stroke-width="1.5"/>' +
+          '<ellipse class="eye-highlight" cx="147" cy="70" rx="13" ry="7" fill="#fff" opacity=".82" transform="rotate(-30 147 70)"/>' +
+          '<circle cx="195" cy="113" r="3.8" fill="#fff" opacity=".3"/>' +
+        '</g>' +
+      '</g>' +
+      '<path d="M19 92 C53 34 108 9 170 9 C232 9 287 34 321 92" fill="none" stroke="#080609" stroke-width="17" stroke-linecap="round"/>' +
+      '<path d="M27 100 C66 155 119 177 170 177 C221 177 274 155 313 100" fill="none" stroke="#080609" stroke-width="10" stroke-linecap="round" opacity=".78"/>' +
+      '<path d="M37 65Q27 50 32 36M58 48Q50 34 56 22" fill="none" stroke="#09070a" stroke-width="3" stroke-linecap="round"/>';
+  }
+
+  const eyeL = $('eyeL');
+  const eyeR = $('eyeR');
+  const title = $('stageTitle');
+  const subtitle = $('stageSubtitle');
+  const eyebrow = $('stageEyebrow');
+  const description = $('stageDescription');
+  const progress = $('progress');
+  const progressLabel = $('progressLabel');
+  const timeline = $('timelineTrack');
+  const ticks = $('timelineTicks');
+  const playBtn = $('playBtn');
+  const playLabel = $('playLabel');
+  const previousBtn = $('previousBtn');
+  const nextBtn = $('nextBtn');
+  const restartBtn = $('restartBtn');
+  const autoToggle = $('autoToggle');
+  const soundToggle = $('soundToggle');
+  const intensityRange = $('intensityRange');
+  const intensityValue = $('intensityValue');
+  const flashOverlay = $('flashOverlay');
+  const announcement = $('announcement');
+  const eyePair = $('eyePair');
+
+  let stageIndex = 0;
+  let elapsed = 0;
+  let playing = false;
+  let angle = 0;
+  let time = 0;
+  let lastFrame = 0;
+  let shake = 0;
+  let gazeX = 0, gazeY = 0, targetX = 0, targetY = 0;
+  let intensity = Number(intensityRange.value) / 100;
+  let soundEnabled = false;
+  let audioContext = null;
+  let masterGain = null;
+  let ambientNodes = [];
+  let particles = [];
+  let width = 0, height = 0, dpr = 1;
+
+  function makeTicks() {
+    ticks.innerHTML = STAGES.map((_,i)=>'<i class="'+(i===stageIndex?'active':'')+'" data-stage="'+i+'"></i>').join('');
+    timeline.setAttribute('aria-valuemax', String(STAGES.length));
+  }
+
+  function updateControls() {
+    playBtn.classList.toggle('is-playing', playing);
+    playBtn.setAttribute('aria-label', playing ? 'Pausar secuencia' : 'Iniciar despertar');
+    playLabel.textContent = playing ? 'Pausar secuencia' : (autoToggle.checked ? 'Iniciar despertar' : 'Siguiente etapa');
+    previousBtn.disabled = stageIndex === 0;
+    nextBtn.disabled = stageIndex === STAGES.length - 1;
+    previousBtn.style.opacity = previousBtn.disabled ? '.35' : '1';
+    nextBtn.style.opacity = nextBtn.disabled ? '.35' : '1';
+  }
+
+  function updateProgress(value = (stageIndex + elapsed / STAGES[stageIndex].duration) / STAGES.length) {
+    const pct = clamp(value) * 100;
+    progress.style.width = pct + '%';
+    const shown = String(stageIndex + 1).padStart(2,'0');
+    progressLabel.textContent = shown + ' / ' + String(STAGES.length).padStart(2,'0');
+    $('stageNumber').textContent = shown;
+    $('stageTotal').textContent = String(STAGES.length).padStart(2,'0');
+    timeline.setAttribute('aria-valuenow', String(stageIndex + 1));
+    [...ticks.children].forEach((tick,i)=>tick.classList.toggle('active',i<=stageIndex));
+  }
+
+  function showAnnouncement(text) {
+    announcement.textContent = text;
+    announcement.classList.add('show');
+    window.clearTimeout(showAnnouncement.timer);
+    showAnnouncement.timer = window.setTimeout(()=>announcement.classList.remove('show'),1500);
+  }
+
+  function spawnBurst(color, amount = 46, force = 1) {
+    if (reducedMotion || intensity <= 0) return;
+    const cx = width * .5, cy = height * .48;
+    const count = Math.round(amount * intensity);
+    for(let i=0;i<count;i++){
+      const a = Math.random()*Math.PI*2;
+      const speed = (1.2 + Math.random()*4.2)*force*intensity;
       particles.push({
-        x: cx, y: cy,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd - 1.2,
-        life: 1,
-        decay: 0.012 + Math.random() * 0.018,
-        r: 1.4 + Math.random() * 3.8,
-        color
+        x:cx+(Math.random()-.5)*30*dpr,y:cy+(Math.random()-.5)*24*dpr,
+        vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-1.1,
+        life:1,decay:.008+Math.random()*.018,
+        radius:(.8+Math.random()*2.7)*dpr,color
       });
     }
+    if(particles.length>220) particles.splice(0,particles.length-220);
   }
 
-  function drawFX(dt, energy) {
-    ctx.clearRect(0, 0, W, H);
-    if (REDUCED) return;
+  function enterStage(index, announce = true) {
+    stageIndex = clamp(index,0,STAGES.length-1);
+    elapsed = 0;
+    const stage = STAGES[stageIndex];
+    document.documentElement.style.setProperty('--accent',rgb(stage.color));
+    document.documentElement.style.setProperty('--accent-soft',rgb(stage.color));
+    eyeL.innerHTML = eyeSVG('L',stage);
+    eyeR.innerHTML = eyeSVG('R',stage);
+    eyebrow.innerHTML = stage.clan + ' <span>•</span> AWAKENING ' + String(stageIndex+1).padStart(2,'0');
+    title.textContent = stage.title;
+    subtitle.textContent = stage.subtitle;
+    description.textContent = stage.description;
+    title.style.textShadow = '0 0 25px rgba('+rgb(stage.color)+',.4),0 0 75px rgba('+rgb(stage.color)+',.2)';
+    makeTicks();
+    updateProgress(stageIndex / STAGES.length);
+    if(stageIndex>0){
+      spawnBurst(stage.color,stageIndex>=7?76:48,stageIndex>=7?1.35:1);
+      if(!reducedMotion){
+        flashOverlay.classList.remove('flash');
+        void flashOverlay.offsetWidth;
+        flashOverlay.classList.add('flash');
+        shake = stageIndex>=7 ? .95 : .5;
+      }
+      if(announce) showAnnouncement(stage.title.toUpperCase()+' — AWAKENED');
+      playTransitionSound();
+    } else if(announce) showAnnouncement('AWAKENING SEQUENCE READY');
+    updateControls();
+  }
+
+  function resize() {
+    dpr = Math.min(1.6,window.devicePixelRatio||1);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    const canvas = $('fx');
+    canvas.width = Math.round(width*dpr);
+    canvas.height = Math.round(height*dpr);
+    canvas.style.width = width+'px';
+    canvas.style.height = height+'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  const ctx = $('fx').getContext('2d',{alpha:true});
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  function drawParticles(dt) {
+    ctx.clearRect(0,0,width,height);
+    if(reducedMotion || intensity===0) return;
     ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 18; i++) {
-      const x = (Math.sin(t * 0.3 + i * 1.7) * 0.35 + 0.5) * W;
-      const y = (Math.cos(t * 0.25 + i * 1.3) * 0.25 + 0.48) * H;
-      const a = 0.04 + energy * 0.08;
-      ctx.beginPath();
-      ctx.arc(x, y, (1.5 + energy * 2) * DPR, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${rgb(currentColor)},${a})`;
-      ctx.fill();
+    ctx.globalCompositeOperation='lighter';
+    const ambientCount = Math.round(18*intensity);
+    for(let i=0;i<ambientCount;i++){
+      const x=(Math.sin(time*.22+i*1.73)*.38+.5)*width;
+      const y=(Math.cos(time*.19+i*1.31)*.29+.48)*height;
+      const alpha=(.035+intensity*.045)*(0.65+.35*Math.sin(time+i));
+      ctx.beginPath();ctx.arc(x,y,1.1+intensity*1.8,0,Math.PI*2);
+      ctx.fillStyle='rgba('+rgb(STAGES[stageIndex].color)+','+alpha+')';ctx.fill();
     }
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx * dt * 58;
-      p.y += p.vy * dt * 58;
-      p.vy += 14 * dt;
-      p.life -= p.decay;
-      if (p.life <= 0) { particles.splice(i, 1); continue; }
-      const a = p.life * 0.85;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * p.life * DPR, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${rgb(p.color)},${a})`;
-      ctx.shadowColor = `rgba(${rgb(p.color)},${a})`;
-      ctx.shadowBlur = 14 * DPR;
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.vy+=10*dt;p.life-=p.decay;
+      if(p.life<=0){particles.splice(i,1);continue;}
+      const alpha=p.life*.8;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.radius*p.life,0,Math.PI*2);
+      ctx.fillStyle='rgba('+rgb(p.color)+','+alpha+')';
+      ctx.shadowColor='rgba('+rgb(p.color)+','+alpha+')';ctx.shadowBlur=12*intensity;
       ctx.fill();
     }
     ctx.restore();
   }
 
-  let t = 0, prev = 0, angle = 0;
-  let lastStage = -1;
-  let completed = false;
-  let currentColor = RED;
-  let shake = 0;
-  let breath = 0;
-  let gazeX = 0, gazeY = 0;
-  let targetGazeX = 0, targetGazeY = 0;
-  let nextGaze = 1.5;
-
-  addEventListener('pointerdown', () => {
-    if (completed) {
-      t = 0; angle = 0; completed = false;
-      lastStage = -1; particles.length = 0; shake = 0;
+  function setupAudio() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if(!AudioCtx) return false;
+    if(!audioContext){
+      audioContext = new AudioCtx();
+      masterGain = audioContext.createGain();
+      masterGain.gain.value = 0;
+      masterGain.connect(audioContext.destination);
+      const filter = audioContext.createBiquadFilter();
+      filter.type='lowpass';filter.frequency.value=210;filter.Q.value=.7;
+      filter.connect(masterGain);
+      [55,82.41,110].forEach((frequency,index)=>{
+        const osc=audioContext.createOscillator();
+        const gain=audioContext.createGain();
+        osc.type=index===1?'triangle':'sine';
+        osc.frequency.value=frequency;
+        gain.gain.value=[.22,.08,.035][index];
+        osc.connect(gain);gain.connect(filter);osc.start();
+        ambientNodes.push({osc,gain});
+      });
     }
+    return true;
+  }
+
+  function setSound(enabled) {
+    soundEnabled=enabled;
+    if(!enabled){
+      if(audioContext&&masterGain){
+        masterGain.gain.setTargetAtTime(0,audioContext.currentTime,.12);
+        audioContext.suspend();
+      }
+      return;
+    }
+    if(!setupAudio()){
+      soundToggle.checked=false;
+      soundEnabled=false;
+      showAnnouncement('AUDIO NO DISPONIBLE EN ESTE NAVEGADOR');
+      return;
+    }
+    audioContext.resume().then(()=>{
+      if(soundEnabled) masterGain.gain.setTargetAtTime(.18,audioContext.currentTime,.5);
+    }).catch(()=>{soundToggle.checked=false;soundEnabled=false;});
+  }
+
+  function playTransitionSound() {
+    if(!soundEnabled||!audioContext) return;
+    if(audioContext.state==='suspended') audioContext.resume();
+    const now=audioContext.currentTime;
+    const osc=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+    const filter=audioContext.createBiquadFilter();
+    const base=stageIndex>=7?95:stageIndex>=3?130:170;
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(base*2.2,now);
+    osc.frequency.exponentialRampToValueAtTime(base,now+.55);
+    filter.type='lowpass';filter.frequency.setValueAtTime(1200,now);filter.frequency.exponentialRampToValueAtTime(180,now+.65);
+    gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.11,now+.06);gain.gain.exponentialRampToValueAtTime(.0001,now+.72);
+    osc.connect(filter);filter.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+.75);
+  }
+
+  function setPlaying(value) {
+    playing=value;
+    updateControls();
+    if(playing && stageIndex===STAGES.length-1 && elapsed>=STAGES[stageIndex].duration){
+      enterStage(0,false);
+    }
+  }
+
+  playBtn.addEventListener('click',()=>{
+    if(!autoToggle.checked){
+      setPlaying(false);
+      enterStage((stageIndex+1)%STAGES.length);
+      return;
+    }
+    setPlaying(!playing);
+  });
+  previousBtn.addEventListener('click',()=>{setPlaying(false);enterStage(stageIndex-1);});
+  nextBtn.addEventListener('click',()=>{setPlaying(false);enterStage(stageIndex+1);});
+  restartBtn.addEventListener('click',()=>{setPlaying(false);particles=[];enterStage(0);});
+  autoToggle.addEventListener('change',()=>{setPlaying(false);updateControls();showAnnouncement(autoToggle.checked?'MODO AUTOMÁTICO':'MODO MANUAL');});
+  soundToggle.addEventListener('change',()=>setSound(soundToggle.checked));
+  intensityRange.addEventListener('input',()=>{
+    intensity=Number(intensityRange.value)/100;
+    intensityValue.value=Math.round(intensity*100)+'%';
+    document.documentElement.style.setProperty('--energy',intensity);
+  });
+  ticks.addEventListener('click',(event)=>{
+    const target=event.target.closest('[data-stage]');
+    if(!target)return;
+    setPlaying(false);enterStage(Number(target.dataset.stage));
+  });
+  $('fullscreenBtn').addEventListener('click',async()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(_){showAnnouncement('PANTALLA COMPLETA NO DISPONIBLE');}
+  });
+  window.addEventListener('pointermove',(event)=>{
+    if(event.pointerType==='touch')return;
+    const rect=eyePair.getBoundingClientRect();
+    targetX=clamp((event.clientX-(rect.left+rect.width/2))/(rect.width/2),-1,1)*3.5;
+    targetY=clamp((event.clientY-(rect.top+rect.height/2))/(rect.height/2),-1,1)*2.2;
+  },{passive:true});
+  window.addEventListener('keydown',(event)=>{
+    if(['INPUT','BUTTON'].includes(document.activeElement.tagName))return;
+    if(event.code==='Space'){event.preventDefault();if(autoToggle.checked)setPlaying(!playing);else enterStage((stageIndex+1)%STAGES.length);}
+    if(event.code==='ArrowRight'){setPlaying(false);enterStage(stageIndex+1);}
+    if(event.code==='ArrowLeft'){setPlaying(false);enterStage(stageIndex-1);}
   });
 
   function frame(now) {
-    const dt = Math.min(0.048, (now - (prev || now)) / 1000);
-    prev = now;
-    if (!completed) t += dt;
-    const time = Math.min(t, END);
-
-    let idx = 0;
-    for (let i = STAGES.length - 1; i >= 0; i--) {
-      if (time >= STAGES[i].start) { idx = i; break; }
-    }
-    const stage = STAGES[idx];
-    const local = time - stage.start;
-    const TRANS = 0.55;
-    const inT = local < TRANS ? smooth(0, TRANS, local) : 1;
-    const outT = local > stage.hold ? 1 - smooth(stage.hold, stage.hold + TRANS, local) : 1;
-    const fade = Math.min(inT, outT);
-
-    const enterFlash = idx > 0 ? Math.max(0, 1 - local / 0.42) : 0;
-    const energy = clamp((idx >= 3 ? 0.55 : 0.28) + enterFlash * 0.7 + (idx === 7 ? 0.3 : 0));
-
-    if (idx !== lastStage) {
-      lastStage = idx;
-      currentColor = stage.color;
-      titleEl.textContent = stage.name;
-      subEl.textContent = stage.sub;
-      titleEl.style.textShadow = `0 0 30px rgba(${rgb(stage.color)},0.5), 0 0 70px rgba(${rgb(stage.color)},0.22)`;
-      subEl.style.color = `rgba(${rgb(stage.color)},0.65)`;
-      document.documentElement.style.setProperty('--accent', rgb(stage.color));
-      if (idx > 0 && !REDUCED) {
-        const power = idx >= 3 ? 1.5 : 1.15;
-        burst(stage.color, idx >= 3 ? 42 : 28, power);
-        shake = idx >= 3 ? 1.15 : 0.7;
+    const dt=Math.min(.05,(now-(lastFrame||now))/1000);
+    lastFrame=now;time+=dt;
+    if(playing&&autoToggle.checked){
+      elapsed+=dt;
+      if(elapsed>=STAGES[stageIndex].duration){
+        if(stageIndex<STAGES.length-1) enterStage(stageIndex+1);
+        else {elapsed=STAGES[stageIndex].duration;setPlaying(false);showAnnouncement('SECUENCIA COMPLETADA');}
       }
     }
-
-    if (shake > 0) {
-      shake = Math.max(0, shake - dt * 3.4);
-      const s = shake * shake;
-      document.documentElement.style.setProperty('--shake-x', `${(Math.random()-0.5)*9*s}px`);
-      document.documentElement.style.setProperty('--shake-y', `${(Math.random()-0.5)*6*s}px`);
-    } else {
-      document.documentElement.style.setProperty('--shake-x', '0px');
-      document.documentElement.style.setProperty('--shake-y', '0px');
-    }
-
-    breath += dt * 1.1;
-    const breathScale = 1 + Math.sin(breath) * 0.008 * (0.6 + energy);
-
-    if (time > nextGaze) {
-      targetGazeX = (Math.random() - 0.5) * 9;
-      targetGazeY = (Math.random() - 0.5) * 5;
-      nextGaze = time + 1.8 + Math.random() * 2.5;
-    }
-    gazeX += (targetGazeX - gazeX) * clamp(dt * 3.2);
-    gazeY += (targetGazeY - gazeY) * clamp(dt * 3.2);
-
-    let spinTarget = 1.3;
-    if (idx <= 2) spinTarget = 2.4 + idx * 1.3;
-    else if (idx <= 6) spinTarget = 8.5 + (idx - 3) * 1.4;
-    else spinTarget = 1.7;
-    angle += spinTarget * dt * (0.35 + 0.65 * fade);
-
-    document.documentElement.style.setProperty('--energy', energy.toFixed(3));
-
-    const map = {
-      t1: idx === 0, t2: idx === 1, t3: idx === 2,
-      itachi: idx === 3, sasuke: idx === 4,
-      madara: idx === 5, obito: idx === 6, rinne: idx === 7
-    };
-
-    eyes.forEach((eye, i) => {
-      const ax = i === 1 ? -1.6 : 1.6;
-      const ay = i === 1 ? 0.9 : -0.7;
-      eye.group.setAttribute('transform',
-        `translate(${gazeX + ax} ${gazeY + ay}) scale(${breathScale})`);
-      eye.spin.setAttribute('transform', `rotate(${angle * 57.3} 170 85)`);
-
-      Object.keys(map).forEach(k => {
-        const op = map[k] ? fade : 0;
-        eye.pats[k].setAttribute('opacity', op.toFixed(3));
-      });
-
-      const gradId = idx === 7 ? `irisPurp-${i === 0 ? 'L' : 'R'}` : `irisRed-${i === 0 ? 'L' : 'R'}`;
-      eye.iris.setAttribute('fill', `url(#${gradId})`);
-
-      const pr = 12.5 + energy * 3.5 - enterFlash * 2.5;
-      eye.pupil.setAttribute('r', pr.toFixed(2));
-
-      if (eye.hl) {
-        const hx = 148 + gazeX * 0.4;
-        const hy = 64 + gazeY * 0.35;
-        eye.hl.setAttribute('cx', hx.toFixed(1));
-        eye.hl.setAttribute('cy', hy.toFixed(1));
-        eye.hl.setAttribute('transform', `rotate(${-32 + gazeX * 0.8} ${hx} ${hy})`);
-      }
+    const stage=STAGES[stageIndex];
+    const energy=intensity*(.55+.45*Math.sin(time*1.35)*.5+.2);
+    document.documentElement.style.setProperty('--energy',clamp(energy).toFixed(3));
+    const breathe=1+Math.sin(time*1.05)*.006*(.5+intensity);
+    angle+=dt*(stageIndex>=7?-.18:.12);
+    gazeX+=(targetX-gazeX)*clamp(dt*2.7);
+    gazeY+=(targetY-gazeY)*clamp(dt*2.7);
+    const irisGroups=document.querySelectorAll('.iris-motion');
+    irisGroups.forEach((group,index)=>{
+      group.setAttribute('transform','translate('+(gazeX+(index?-.8:.8))+' '+gazeY+') scale('+breathe+') rotate('+angle*57.3+' 170 95)');
     });
-
-    progressEl.style.width = (clamp(time / END) * 100) + '%';
-    drawFX(dt, energy);
-
-    if (time >= END) completed = true;
+    document.querySelectorAll('.pupil').forEach(pupil=>pupil.setAttribute('r',(12+intensity*2.2).toFixed(2)));
+    if(shake>0&&!reducedMotion){
+      shake=Math.max(0,shake-dt*2.8);
+      const amount=shake*shake*5;
+      document.documentElement.style.setProperty('--shake-x',((Math.random()-.5)*amount)+'px');
+      document.documentElement.style.setProperty('--shake-y',((Math.random()-.5)*amount*.7)+'px');
+    }else{
+      document.documentElement.style.setProperty('--shake-x','0px');
+      document.documentElement.style.setProperty('--shake-y','0px');
+    }
+    updateProgress();
+    drawParticles(dt);
     requestAnimationFrame(frame);
   }
 
+  makeTicks();
+  enterStage(0,false);
+  updateControls();
+  intensityValue.value=Math.round(intensity*100)+'%';
   requestAnimationFrame(frame);
 })();
