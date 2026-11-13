@@ -163,3 +163,40 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 .eye-frame .sclera-veins path{animation:veinGlow 5s ease-in-out infinite}
 .eye-frame .eye{filter:drop-shadow(0 5px 5px rgba(0,0,0,.65))}
 @keyframes veinGlow{0%,100%{opacity:.48}50%{opacity:.9}}
+
+/* TRUE DOJUTSU REVEAL: blink-shutter transition; iris art never spins. */
+.eye-scene.stage-transition .eye-frame{
+  animation:eyeShutterReveal 1.32s cubic-bezier(.18,.72,.18,1) both!important;
+  will-change:clip-path,filter,transform;
+}
+.eye-scene.stage-transition .eye-frame:nth-child(2){animation-delay:.055s!important}
+@keyframes eyeShutterReveal{
+  0%{clip-path:inset(0 0 0 0);filter:brightness(1);transform:translateY(0) scale(1)}
+  22%{clip-path:inset(38% 0 38% 0);filter:brightness(1.8);transform:translateY(2px) scale(1.025)}
+  37%{clip-path:inset(49% 0 49% 0);filter:brightness(2.5);transform:translateY(0) scale(1.04)}
+  48%{clip-path:inset(49% 0 49% 0);filter:brightness(2.1);transform:translateY(0) scale(1.04)}
+  76%{clip-path:inset(0 0 0 0);filter:brightness(1.45);transform:translateY(-4px) scale(1.035)}
+  100%{clip-path:inset(0 0 0 0);filter:brightness(1);transform:translateY(0) scale(1)}
+}
+.eye-scene.stage-transition .scene-flare{animation:awakeningSlash .9s .24s ease-out both}
+.eye-scene.stage-transition .scene-orbit--one{animation:orbitBurst 1.3s ease-out both}
+.eye-scene.stage-transition .scene-orbit--two{animation:orbitBurst 1.45s .08s ease-out both}
+.eye-scene.stage-transition .scene-ring--inner{animation:ringReveal 1.25s ease-out both}
+.eye-scene.stage-transition .scene-ring--outer{animation:ringReveal 1.4s .08s ease-out both,rotate 90s linear infinite}
+.eye-scene.stage-transition .eye-pair{animation:eyeImpactReveal 1.25s cubic-bezier(.16,.8,.2,1) both}
+@keyframes awakeningSlash{0%{opacity:0;transform:scaleY(.05);filter:brightness(3)}30%{opacity:1;transform:scaleY(1);filter:brightness(2)}100%{opacity:0;transform:scaleY(.15);filter:brightness(1)}}
+@keyframes orbitBurst{0%{opacity:0;transform:scale(.55) rotate(-32deg)}35%{opacity:.85}100%{opacity:.28;transform:scale(1.12) rotate(18deg)}}
+@keyframes ringReveal{0%{opacity:0;scale:.52}42%{opacity:.8}100%{opacity:.28;scale:1.12}}
+@keyframes eyeImpactReveal{0%{transform:scale(.92) translateY(8px)}38%{transform:scale(1.055) translateY(-5px)}64%{transform:scale(.985)}100%{transform:scale(1)}}
+/* Natural living-eye motion: no continuous rotation of the iris or tomoe. */
+.eye-pair{animation:eyeBreath 5.8s ease-in-out infinite!important}
+.eye-frame .iris-motion{transform:none!important;animation:none!important}
+.eye-frame .iris-fibers{transform-origin:170px 95px;animation:none!important}
+.eye-frame .pattern,.eye-frame .pupil{transform:none!important}
+@keyframes eyeBreath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.006)}}
+@media(prefers-reduced-motion:reduce){
+ .eye-scene.stage-transition .eye-frame,.eye-scene.stage-transition .eye-pair,
+ .eye-scene.stage-transition .scene-flare,.eye-scene.stage-transition .scene-orbit,
+ .eye-scene.stage-transition .scene-ring{animation:none!important}
+ .eye-pair{animation:none!important}
+}
