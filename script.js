@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);\n  window.addEventListener('error',(event)=>{\n    const status=document.getElementById('motionStatus');\n    if(status) status.textContent='ERROR DE INTERACCIÓN · '+(event.message||'SCRIPT');\n  });
   const clamp = (v, min = 0, max = 1) => Math.max(min, Math.min(max, v));
   const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (a, b, x) => {
@@ -349,34 +349,47 @@
     }
   }
 
-  playBtn.addEventListener('click',()=>{
-    if(!autoToggle.checked){
-      setPlaying(false);
-      enterStage((stageIndex+1)%STAGES.length);
-      return;
+  // Delegación centralizada: mantiene operativos los controles aunque el contenido
+  // interno de los botones (SVG/texto) sea el objetivo real del clic.
+  document.addEventListener('click',(event)=>{
+    const button=event.target.closest('button');
+    if(button){
+      switch(button.id){
+        case 'playBtn':
+          if(!autoToggle.checked){
+            setPlaying(false);
+            enterStage((stageIndex+1)%STAGES.length);
+          }else setPlaying(!playing);
+          break;
+        case 'previousBtn':
+          setPlaying(false);enterStage(stageIndex-1);break;
+        case 'nextBtn':
+          setPlaying(false);enterStage(stageIndex+1);break;
+        case 'restartBtn':
+          setPlaying(false);particles=[];enterStage(0);break;
+        case 'fullscreenBtn':
+          (async()=>{
+            try{
+              if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+              else await document.exitFullscreen();
+            }catch(_){showAnnouncement('PANTALLA COMPLETA NO DISPONIBLE');}
+          })();
+          break;
+      }
     }
-    setPlaying(!playing);
+    const tick=event.target.closest('#timelineTicks [data-stage]');
+    if(tick){
+      setPlaying(false);
+      enterStage(Number(tick.dataset.stage));
+    }
   });
-  previousBtn.addEventListener('click',()=>{setPlaying(false);enterStage(stageIndex-1);});
-  nextBtn.addEventListener('click',()=>{setPlaying(false);enterStage(stageIndex+1);});
-  restartBtn.addEventListener('click',()=>{setPlaying(false);particles=[];enterStage(0);});
+
   autoToggle.addEventListener('change',()=>{setPlaying(false);updateControls();showAnnouncement(autoToggle.checked?'MODO AUTOMÁTICO':'MODO MANUAL');});
   soundToggle.addEventListener('change',()=>setSound(soundToggle.checked));
   intensityRange.addEventListener('input',()=>{
     intensity=Number(intensityRange.value)/100;
     intensityValue.value=Math.round(intensity*100)+'%';
     document.documentElement.style.setProperty('--energy',intensity);
-  });
-  ticks.addEventListener('click',(event)=>{
-    const target=event.target.closest('[data-stage]');
-    if(!target)return;
-    setPlaying(false);enterStage(Number(target.dataset.stage));
-  });
-  $('fullscreenBtn').addEventListener('click',async()=>{
-    try{
-      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
-      else await document.exitFullscreen();
-    }catch(_){showAnnouncement('PANTALLA COMPLETA NO DISPONIBLE');}
   });
   window.addEventListener('pointermove',(event)=>{
     if(event.pointerType==='touch')return;
