@@ -148,3 +148,10 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 @keyframes highlightGlide{0%,100%{opacity:.72;transform:translate(0,0)}50%{opacity:1;transform:translate(4px,-2px)}}
 @keyframes orbitSurge{to{transform:rotate(343deg) scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.eye-pair,.eye-frame .iris-fibers,.eye-frame .eye-highlight{animation:none!important}.eye-scene.impact{animation:none!important}}
+
+/* Stability patch: keep the eye art fixed; motion belongs to light and scene FX. */
+.eye-pair{animation:eyeHover 7s ease-in-out infinite!important}
+.eye-frame{animation:none}
+.eye-frame .iris-motion{transform-box:initial;transform-origin:initial}
+.eye-scene .scene-orbit,.eye-scene .scene-ring{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.eye-pair{animation:none!important}}
