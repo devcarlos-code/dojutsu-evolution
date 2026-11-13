@@ -275,6 +275,16 @@
     if(reducedMotion || intensity===0) return;
     ctx.save();
     ctx.globalCompositeOperation='lighter';
+    for(let i=shockwaves.length-1;i>=0;i--){
+      const ring=shockwaves[i];
+      ring.r+=dt*(520+intensity*260); ring.life-=dt*1.25;
+      if(ring.life<=0){shockwaves.splice(i,1);continue;}
+      ctx.beginPath();ctx.arc(ring.x,ring.y,ring.r,0,Math.PI*2);
+      ctx.strokeStyle='rgba('+rgb(ring.color)+','+(ring.life*.42)+')';
+      ctx.lineWidth=1.5+ring.life*3;
+      ctx.shadowColor='rgba('+rgb(ring.color)+','+ring.life*.5+')';
+      ctx.shadowBlur=22;ctx.stroke();
+    }
     const ambientCount = Math.round(18*intensity);
     for(let i=0;i<ambientCount;i++){
       const x=(Math.sin(time*.22+i*1.73)*.38+.5)*width;
