@@ -53,7 +53,7 @@ h1{font-family:Cinzel,Georgia,serif;font-weight:600;font-size:clamp(35px,5vw,66p
 .timeline__labels{display:flex;justify-content:space-between;color:rgba(255,255,255,.37);font-size:8px;font-weight:700;letter-spacing:.2em;margin-bottom:11px}
 .timeline__track{height:3px;border-radius:8px;background:rgba(255,255,255,.09);position:relative}
 .timeline__fill{height:100%;width:0;background:linear-gradient(90deg,rgb(var(--accent)),rgba(var(--accent),.55));box-shadow:0 0 12px rgba(var(--accent),.65);border-radius:inherit;transition:width .35s}
-.timeline__ticks{position:absolute;inset:-3px 0;display:flex;justify-content:space-between;pointer-events:none}
+.timeline__ticks{position:absolute;inset:-3px 0;display:flex;justify-content:space-between;pointer-events:auto}
 .timeline__ticks i{width:2px;height:9px;background:#54464b;border-radius:3px}
 .timeline__ticks i.active{background:rgb(var(--accent));box-shadow:0 0 7px rgb(var(--accent))}
 .controls{display:flex;justify-content:center;align-items:center;gap:12px;margin:22px 0 19px}
